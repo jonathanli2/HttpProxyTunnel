@@ -1,102 +1,117 @@
 using System;
 using System.Net.Sockets;
-
-namespace WinTunnel
+using System.Threading;
+using  System.Net;
+namespace WinProxy
 {
-	/// <summary>
-	/// Summary description for SocketListenerTask.
-	/// </summary>
-	public class ProxyClientListenerTask: ITask
-	{
-		public ProxyConfig m_config;
-	
-		public Socket listenSocket = null;
+    /// <summary>
+    /// Summary description for SocketListenerTask.
+    /// </summary>
+    public class ProxyClientListenerTask
+    {
+      
+        public Socket listenSocket = null;
 
-		public static Logger logger;
+        private bool m_bContinue;
+        private ManualResetEvent allDone;
+        IPEndPoint m_local;
+        IPEndPoint m_server;
 
-		private static ConnectionManager m_mgr = ConnectionManager.getInstance();
+   
+        public ProxyClientListenerTask(IPEndPoint local, IPEndPoint server)
+        {
+            Console.WriteLine("ProxyClientListenerTask {0} created.", this);
+            m_local = local;
+            m_server = server;
+        }
 
-		public ProxyClientListenerTask(ProxyConfig config)
-		{
-			Console.WriteLine("ProxyClientListenerTask {0} created.", this);
-			m_config = config;
-			logger = Logger.getInstance();
-		}
+        #region ITask Members
 
-		#region ITask Members
+        public void run()
+        {
+            try
+            {
+                m_bContinue = true;
+                allDone = new ManualResetEvent(false);
 
-		public void run()
-		{
-			listenSocket = new Socket( AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-			listenSocket.Bind(m_config.localEP);
-			listenSocket.Listen(100); //allow up to 100 pending connections
-			logger.info("[{0}] Waiting for client connection at {1}...", m_config.serviceName, m_config.localEP.ToString());
+                listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                listenSocket.Bind(m_local);
+                listenSocket.Listen(100); //allow up to 100 pending connections
 
-			listenSocket.BeginAccept( new AsyncCallback(ProxyClientListenerTask.acceptCallBack), this);
-		}
+                while (m_bContinue)
+                {
+                    WinTunnel.WriteTextToConsole(String.Format("Waiting for client connection at {0}...", m_local.ToString()));
 
-		public String getName()
-		{
-			return "ProxyClientListenerTask[" + m_config.localEP.ToString() + "]"; 
-		}
+                    allDone.Reset();
+                    listenSocket.BeginAccept(new AsyncCallback(ProxyClientListenerTask.acceptCallBack), this);
+                    allDone.WaitOne();
+                }
+             }
+            finally
+            {
+                listenSocket.Close();
+                WinTunnel.WriteTextToConsole(String.Format("client connection loop end {0}...", m_local.ToString()));
+            }
+        }
 
-		#endregion
+        public void stop()
+        {
+            m_bContinue = false;
+            allDone.Set();
+        }
 
-		//Call back when the socket has connected
+        #endregion
+
+        //Call back when the server listener socket has connected to a client request
         public static void acceptCallBack(IAsyncResult ar)
         {
-
             ProxyConnection conn = null;
 
-            lock (logger)
+            try
             {
-                try
+
+                ProxyClientListenerTask listener = (ProxyClientListenerTask)ar.AsyncState;
+                if (listener.m_bContinue)
                 {
-                    ProxyClientListenerTask listener = (ProxyClientListenerTask)ar.AsyncState;
+                    listener.allDone.Set();
 
                     //create a new task for connecting to the server side.
-                    conn = m_mgr.getConnection();
-                    conn.serviceName = listener.m_config.serviceName;
+
+                    conn = new ProxyConnection();
+
                     conn.clientSocket = listener.listenSocket.EndAccept(ar); //accept the client connection
 
-                    logger.info("[{0}] Conn#{1} Accepted new connection. Local: {2}, Remote: {3}.",
-                        conn.serviceName,
+                    WinTunnel.WriteTextToConsole(string.Format("Conn#{0} Accepted new connection. Local: {1}, Remote: {2}.",
                         conn.connNumber,
                         conn.clientSocket.LocalEndPoint.ToString(),
-                        conn.clientSocket.RemoteEndPoint.ToString());
+                        conn.clientSocket.RemoteEndPoint.ToString()));
 
-                    conn.serverEP = listener.m_config.serverEP;
+                    conn.serverEP = listener.m_server;
 
-                    //Start listening for connection on this port again
-                    listener.listenSocket.BeginAccept(new AsyncCallback(ProxyClientListenerTask.acceptCallBack), listener);
-
-                    ProxyServerConnectTask serverTask = new ProxyServerConnectTask(conn); //now try to connect to the server
-                    ThreadPool.getInstance().addTask(serverTask);
+                    conn.serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    conn.serverSocket.BeginConnect(conn.serverEP, new AsyncCallback(ProxySwapDataTask.connectForwardServerCallBack), conn);
                 }
-                catch (SocketException se)
+            }
+            catch (SocketException se)
+            {
+                WinTunnel.WriteTextToConsole(string.Format("Conn# {0} Socket Error occurred when accepting client socket. Error Code is: {1}",
+                    conn.connNumber, se.ErrorCode));
+                if (conn != null && WinTunnel.connMgr!= null)
                 {
-                    logger.error("[{0}] Conn# {1} Socket Error occurred when accepting client socket. Error Code is: {2}",
-                        conn.serviceName, conn.connNumber, se.ErrorCode);
-                    if (conn != null)
-                    {
-                        conn.Release();
-                    }
+                    WinTunnel.connMgr.Release(conn);
                 }
-                catch (Exception e)
+            }
+            catch (Exception e)
+            {
+                WinTunnel.WriteTextToConsole(string.Format("Conn# {0} Error occurred when accepting client socket. Error is: {1}",
+                     conn.connNumber, e));
+                if (conn != null && WinTunnel.connMgr != null)
                 {
-                    logger.error("[{0}] Conn# {1} Error occurred when accepting client socket. Error is: {2}",
-                        conn.serviceName, conn.connNumber, e);
-                    if (conn != null)
-                    {
-                        conn.Release();
-                    }
-                }
-                finally
-                {
-                    conn = null; //free reference to the object
+                    WinTunnel.connMgr.Release(conn);
+	
                 }
             }
         }
-		
-	}
+
+    }
 }

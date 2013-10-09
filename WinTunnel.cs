@@ -1,210 +1,146 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.ServiceProcess;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Net;
 using System.Runtime.InteropServices;
 
 
-namespace WinTunnel
+namespace WinProxy
 {
-	public class WinTunnel : System.ServiceProcess.ServiceBase
+	public class WinTunnel 
 	{
-		public static String SERVICE_NAME = "WinTunnel";
-		public static String SERVERICE_DISPLAY_NAME = "Windows TCP Tunnel";
+        public String m_strListeningPort,  m_strForwardAddress,  m_strLogFileLocation;
+        private bool m_bLogToFile;
+        public IPEndPoint m_localEP;
+        public IPEndPoint m_serverEP;
 
-		private static ManualResetEvent shutdownEvent = new ManualResetEvent(false);
+        public delegate void WriteToConsole(string message);
+        private static WriteToConsole m_delWriteToConsole;
+        private static WriteToConsole m_delWriteToLog;
 
-		private ConnectionManager m_connMgr;
-		private AppConfig m_config;
+		public static ConnectionManager connMgr;
+        ProxyClientListenerTask task;
 
-		private Logger logger;
-
-		private bool m_debug = false;
-
-		private ConsoleCtrl m_ctrl = null;
-
-		public WinTunnel()
+		public WinTunnel(String strListeningPort, string strForwardAddress, string strLogFileLocation, 
+            WriteToConsole delWriteToConsole, WriteToConsole delWriteToLog, bool bLogToFile )
 		{
-			CanPauseAndContinue = true;
-			ServiceName = SERVICE_NAME;
-			AutoLog = false;
+            m_strListeningPort = strListeningPort;
+            m_strForwardAddress = strForwardAddress;
+            m_strLogFileLocation = strLogFileLocation;
+            m_delWriteToConsole = delWriteToConsole;
+            m_delWriteToLog = delWriteToLog;
+            m_bLogToFile = bLogToFile;
+
 		}
 
-		// The main entry point for the process
-		static void Main(string[] args)
-		{
-			if (args.Length==1 && args[0].CompareTo("-debug") ==0 ) //run as a console application 
-			{
-				System.Console.WriteLine("Starting WinTunnel as a console application...");
-				WinTunnel tunnel = new WinTunnel();
-				tunnel.m_debug = true;
-				tunnel.OnStart(args);
-				return;
-			}
-			else if (args.Length == 1 && args[0].CompareTo("-remove") ==0 ) //remove service
-			{
-				System.Console.WriteLine("Remove WinTunnel as a service...");
-				String argument = "-u " + Process.GetCurrentProcess().MainModule.ModuleName;
-				String launchCmd = RuntimeEnvironment.GetRuntimeDirectory() + "InstallUtil.exe";
-				launchProcess(launchCmd, argument);
-				return;
-			}
-			else if (args.Length  > 0 && args[0].CompareTo("-install") ==0 ) //install as a service
-			{
-				System.Console.WriteLine("Installing WinTunnel as a service...");
-		
-				StringBuilder argument = new StringBuilder();
-				int i=1;
-				while(i < args.Length)
-				{
-					if (args[i].ToLower().CompareTo("-user") == 0)
-					{
-						argument.Append(" /user=");
-						argument.Append(args[i+1]);
-						i+=2;
-					}
-					else if ( args[i].ToLower().CompareTo("-password") == 0)
-					{
-						argument.Append(" /password=");
-						argument.Append( args[i+1]);
-						i+=2;
-					}
-					else
-					{
-						i++;
-					}
-				}
+        public static void WriteTextToConsole(string strConsoleText)
+        {
+            if (m_delWriteToConsole != null)
+                m_delWriteToConsole(strConsoleText + "\r\n");
+        }
 
-				argument.Append(" ");
-				argument.Append( Process.GetCurrentProcess().MainModule.ModuleName );
+        public static void WriteTextToLog(string strLogText)
+        {
+            if (m_delWriteToLog != null)
+            {
+                m_delWriteToLog(strLogText);
+            }
+        }
 
-				String launchCmd = RuntimeEnvironment.GetRuntimeDirectory() + "InstallUtil.exe";
-				launchProcess(launchCmd, argument.ToString());
-				return;
-			}
-
-			System.ServiceProcess.ServiceBase[] ServicesToRun;
-			ServicesToRun = new System.ServiceProcess.ServiceBase[] { new WinTunnel() };
-			System.ServiceProcess.ServiceBase.Run(ServicesToRun);
-		}
-
-		static void launchProcess(String binary, String argument)
-		{
-			System.Diagnostics.ProcessStartInfo psInfo =
-				new System.Diagnostics.ProcessStartInfo(binary, argument);
-				
-			System.Console.WriteLine();
-			System.Console.WriteLine(psInfo.FileName + " " + psInfo.Arguments);
-			System.Console.WriteLine();
-
-			psInfo.RedirectStandardOutput = true;
-			psInfo.WindowStyle = System.Diagnostics.ProcessWindowStyle.Hidden;
-			psInfo.UseShellExecute = false;
-			System.Diagnostics.Process ps;
-			ps = System.Diagnostics.Process.Start(psInfo);
-			System.IO.StreamReader msgOut = ps.StandardOutput;
-			ps.WaitForExit(5000); //wait up to 5 seconds 
-			if (ps.HasExited)
-			{
-				System.Console.WriteLine(msgOut.ReadToEnd()); //write the output
-			}
-			return;
-		}
-
-		/// <summary>
-		/// Set things in motion so your service can do its work.
-		/// </summary>
-		protected override void OnStart(string[] args)
-		{
-			Thread t = new Thread( new ThreadStart(startApplication) );
-			t.Name = "main";
-			t.Start();
-		}
- 
 		/// <summary>
 		/// Stop this service.
 		/// </summary>
-		protected override void OnStop()
-		{
-			//Signal the main thread to exit
-			shutdownEvent.Set();
-		}
-		
-		public static void consoleEventHandler(ConsoleCtrl.ConsoleEvent consoleEvent)
-		{
-			if (ConsoleCtrl.ConsoleEvent.CTRL_C == consoleEvent)
-			{
-				Logger.getInstance().info("Received CTRL-C from Console. Shutting down...");
-				WinTunnel.shutdownEvent.Set();
-			}
-			else
-			{
-				Logger.getInstance().warn("Received unknown event {0}.  Ignoring...", consoleEvent);
-			}
-		}
-
-		private void startApplication()
+		public void Stop()
 		{
 			
-			logger = Logger.getInstance();
-			logger.initialize(m_debug);
-			logger.info("");
-			logger.info("===============================");
-			logger.info("*** Starting up WinTunnel ****");
-			logger.info("===============================");
+            //close the main listen socket
+            task.stop();
 
-			logger.info("Starting thread... ");
-
-			//create a signal handler to detect Ctrl-C to stop the service
-			if (m_debug)
-			{
-				m_ctrl = new ConsoleCtrl();
-				m_ctrl.ControlEvent += new ConsoleCtrl.ControlEventHandler(consoleEventHandler);
-			}
-
-			//Load configuration and startup
-			m_config = new AppConfig();
-			if ( ! m_config.initialize() )
-			{
-				logger.error("Error loading configuration file.  Exiting...");
-				return;
-			}
-
-			//Initialize the threadpool
-			ThreadPool pool = ThreadPool.getInstance();
-			pool.initialize(3); //start pool with 3 threads
-
-			m_connMgr = ConnectionManager.getInstance();
-		
-			foreach (ProxyConfig cfg in m_config.m_proxyConfigs)
-			{
-				ProxyClientListenerTask task = new ProxyClientListenerTask(cfg);
-				pool.addTask(task);
-			}
-
-			shutdownEvent.WaitOne(); //now just wait for signal to exit
-			logger.info("Thread is initiating shutdown... ");
-
-			if (m_ctrl != null)
-			{
-				logger.info("Releasing Console Event handler. ");
-				m_ctrl = null;
-			}
-			
 			//Shutdown the connection manager
-			m_connMgr.shutdown();
-			logger.info("Connection Manager has been terminated. ");
-
-			//Shutdown the thread pool
-			pool.Stop();
-			logger.info("ThreadPool has been stopped. ");
-
-			logger.info("Terminating thread... ");
-			logger.info("*** WinTunnel exited. ****");
-			logger.close();
+			connMgr.shutdown();
+            connMgr = null;
+			WriteTextToConsole("WinTunnel stopped. ");
+	
+			Logger.close();
 		}
+
+
+        public void Start()
+        {
+            WriteTextToConsole("*** Starting up WinTunnel ****");
+         
+            WriteTextToConsole("Starting thread... ");
+         
+            Logger.initialize(m_strLogFileLocation, m_bLogToFile);
+  
+            //Load configuration and startup
+            loadConfiguration(m_strListeningPort, m_strForwardAddress);
+           
+            connMgr = new ConnectionManager();
+
+
+            task = new ProxyClientListenerTask(m_localEP, m_serverEP);
+            Thread t = new Thread(task.run);
+            t.Start();
+
+        }
+
+        public void loadConfiguration(string strListeningPort, string strForwardAddress)
+        {
+
+            try
+            {
+
+                int idx;
+                String listenPort;
+                String listenIP;
+                String targetPort;
+                String targetIP;
+
+                idx = strListeningPort.IndexOf(":");
+                if (idx > 0)
+                {
+                    listenIP = strListeningPort.Substring(0, idx);
+                    listenPort = strListeningPort.Substring(idx + 1);
+                    m_localEP = new IPEndPoint(IPAddress.Parse(listenIP), Int32.Parse(listenPort));
+                }
+                else
+                {
+                    listenPort = strListeningPort;
+                    m_localEP = new IPEndPoint(IPAddress.Any, Int32.Parse(listenPort));
+                }
+
+                idx = strForwardAddress.IndexOf(":");
+                if (idx != -1)
+                {
+                    targetIP = strForwardAddress.Substring(0, idx);
+                    targetPort = strForwardAddress.Substring(idx + 1);
+                }
+                else
+                {
+                    targetIP = strForwardAddress;
+                    targetPort = "80";
+                }
+
+                IPAddress ip;
+                if (!IPAddress.TryParse(targetIP, out ip))
+                {
+                    IPHostEntry hostEntry;
+
+                    hostEntry = Dns.GetHostEntry(targetIP);
+                    ip = hostEntry.AddressList[0];
+                }
+
+                m_serverEP = new IPEndPoint(ip, Int32.Parse(targetPort));
+
+            }
+            catch (Exception e)
+            {
+                WinTunnel.WriteTextToConsole(string.Format("The exception is {0}.", e));
+            }
+        }
 	}
 }

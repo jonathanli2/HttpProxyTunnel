@@ -4,155 +4,86 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading;
 
-namespace WinTunnel
+namespace WinProxy
 {
 	/// <summary>
 	/// Summary description for Logger.
 	/// </summary>
 	public class Logger
 	{
-		private static Logger m_logger;
+		private static Logger s_logger;
+        private bool m_bLogToFile;
 
 		private StreamWriter m_logWriter;
-		private int m_maxFileCount;
-		private int m_maxFileSize;
-		private String m_logName;
-
-		private bool m_logToConsole = false;
-
-		public const int DEBUG =0;
-		public const int INFO =1;
-		public const int WARN = 2;
-		public const int ERROR = 3;
-        public const int DATA = 4;
 
 		private Logger() {} //private constructor--for singleton
-		
-		public static Logger getInstance()
-		{
-			if (m_logger == null)
-			{
-				m_logger = new Logger();
-			}
-			return m_logger;
-		}
 
-		public bool initialize(bool debug)
-		{
-			//Check the location of the assembly
-			String binFullPath = Process.GetCurrentProcess().MainModule.FileName;
-			int idx = binFullPath.LastIndexOf("\\");
-			String binDir = binFullPath.Substring(0, idx+1);
-			
-            
 
-			return initialize(debug, binDir + "WinTunnel.log", 1024000, 10);
-		}
-
-		public bool initialize(bool debug, String logName, int maxFileSize, int maxCount)
+		public static bool initialize(string strLogFilePath, bool bLogToFile)
 		{
-			m_maxFileSize = maxFileSize;
-			m_maxFileCount = maxCount;
-			m_logName = logName;
+            s_logger = new Logger();
+            s_logger.m_bLogToFile = bLogToFile;
 
             //delete old log files
-			String newName = m_logName + ".";
+            if (bLogToFile)
+            {
+                if (File.Exists(strLogFilePath + ".bak"))
+                    File.Delete(strLogFilePath + ".bak"); //remove the .bak if it exists
 
-		    if (File.Exists(newName + m_maxFileCount)) 
-                File.Delete(newName + m_maxFileCount); //remove the last one if it exists
+                //copy current file to .bak
+                if (File.Exists(strLogFilePath))
+                {
+                    File.Copy(strLogFilePath, strLogFilePath + ".bak");
+                    File.Delete(strLogFilePath);
+                }
 
-			for (int i= m_maxFileCount -1; i> 0; i--)
-			{
-			    if (File.Exists(newName+i)) File.Delete(newName+i);
-			}
-							
-			if (debug) //log message to console as well
-			{
-				m_logToConsole = true; 
-			}
-
-			try
-			{
-				//Create the stream for writing the log
-				m_logWriter = new StreamWriter( m_logName, false);
-			}
-			catch (Exception e)
-			{
-				System.Console.WriteLine("Unable to create log {0}.  The exception is {1}.", logName, e);
-				m_logWriter = null;
-			}
+                try
+                {
+                    //Create the stream for writing the log
+                    s_logger.m_logWriter = new StreamWriter(strLogFilePath, false);
+                }
+                catch (Exception e)
+                {
+                    System.Console.WriteLine("Unable to create log {0}.  The exception is {1}.", strLogFilePath, e);
+                    s_logger.m_logWriter = null;
+                }
+            }
 			return true;
 
 		}
 
-		public void close()
+		public static void close()
 		{
-			if (m_logWriter != null)
-			{
-				m_logWriter.Close();
-				m_logWriter = null;
-			}
+            if (s_logger!=null)
+            {
+                if (s_logger.m_logWriter != null)
+                {
+                    s_logger.m_logWriter.Close();
+                    s_logger.m_logWriter = null;
+                }
+                s_logger = null;
+            }
 		}
 
-		public void log(int level, String msg, params object[] vars)
-		{
-			String convertedMsg = convertToLogMsg(level, msg, vars);
-			writeToLog(convertedMsg);
-		}
-
-		public void debug(String msg, params object[] vars)
-		{
-			//String convertedMsg = convertToLogMsg(DEBUG, msg, vars);
-			//writeToLog(convertedMsg);
-		}
-		
-		public void info(String msg, params object[] vars)
-		{
-			//String convertedMsg = convertToLogMsg(INFO, msg, vars);
-			//writeToLog(convertedMsg);
-		}
-		
-		public void warn(String msg, params object[] vars)
-		{
-			//String convertedMsg = convertToLogMsg(WARN, msg, vars);
-			//writeToLog(convertedMsg);
-		}
-
-		public void error(String msg, params object[] vars)
-		{
-			String convertedMsg = convertToLogMsg(ERROR, msg, vars);
-			writeToLog(convertedMsg);
-		}
-
-        public void data(byte[] data, int start, int end, String msg, params object[] vars)
+        public static void log(byte[] data, int start, int end, String msg, params object[] vars)
         {
-            String strData = Encoding.UTF8.GetString(data, start, end);
-            String convertedMsg = convertToLogMsg(DATA, msg, vars);
-            writeToLog(convertedMsg+ strData);
+            if (s_logger != null)
+            {
+                String strData = Encoding.UTF8.GetString(data, start, end);
+                String convertedMsg = s_logger.convertToLogMsg(msg, vars);
+                s_logger.writeToLog(convertedMsg + "\r\n"+ strData +"\r\n");
+            }
         }
 
-		private String convertToLogMsg( int level, String msg, object[] vars)
+		private String convertToLogMsg( String msg, object[] vars)
 		{
 			StringBuilder builder = new StringBuilder();
 			//create the header:  TimeStamp [Level] 
 			builder.Append(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff "));
-			switch(level)
-			{	
-				case DEBUG: 
-					builder.Append("[DEBUG] "); break;
-				case INFO:
-					builder.Append("[INFO]  "); break;
-				case WARN:
-					builder.Append("[WARN]  "); break;
-				case ERROR:
-					builder.Append("[ERROR] "); break;
-                case DATA:
-                    builder.Append("[DATA]  "); break;
-			}
 
-			builder.Append("[");
-			builder.Append(Thread.CurrentThread.Name);
-			builder.Append( "] ");
+			builder.Append("T");
+			builder.Append(Thread.CurrentThread.ManagedThreadId);
+			builder.Append( " ");
 
 			builder.Append(msg);
 
@@ -169,9 +100,9 @@ namespace WinTunnel
 
 		public void writeToLog(String msg)
 		{
-			if (m_logToConsole) System.Console.WriteLine(msg);
+			WinTunnel.WriteTextToLog(msg);
 
-			if (m_logWriter != null)
+			if (m_bLogToFile && m_logWriter != null)
 			{
 				lock(m_logWriter)
 				{
@@ -181,19 +112,6 @@ namespace WinTunnel
 						m_logWriter.Write(Environment.NewLine);
 						m_logWriter.Flush();
 			
-						if (m_logWriter.BaseStream.Length >= m_maxFileSize)
-						{
-							m_logWriter.Close();
-							String newName = m_logName + ".";
-
-							if (File.Exists(newName + m_maxFileCount)) File.Delete(newName + m_maxFileCount); //remove the last one if it exists
-							for (int i= m_maxFileCount -1; i> 0; i--)
-							{
-								if (File.Exists(newName+i)) File.Move(newName+i, newName+(i+1));
-							}
-							File.Move(m_logName, m_logName + ".1"); //move the current one to the have the .1 extension
-							m_logWriter = new StreamWriter(m_logName);
-						}
 					}
 					catch (Exception e)
 					{

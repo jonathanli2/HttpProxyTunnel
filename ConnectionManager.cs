@@ -1,7 +1,7 @@
 using System;
 using System.Collections;
 
-namespace WinTunnel
+namespace WinProxy
 {
 	/// <summary>
 	/// Summary description for ConnectionManager.
@@ -10,38 +10,20 @@ namespace WinTunnel
 	{
 		private ArrayList m_connections= null;
 
-		private static ConnectionManager m_mgr = null;
-		private static int m_connCount = 0;
+		private  int m_connCount = 0;
 
-		private static int m_releaseCount = 0;
-
-		private Logger logger;
-
-		private ConnectionManager()
+	
+		public ConnectionManager()
 		{
-			logger = Logger.getInstance();
-
-			logger.info("ConnectionManager object instantiated.");
 			m_connections = ArrayList.Synchronized( new ArrayList());
 		}
 
-		public static ConnectionManager getInstance()
-		{
-			if (m_mgr == null)
-			{
-				m_mgr = new ConnectionManager();
-			}
-			return m_mgr;
-		}
 
-		public ProxyConnection getConnection()
+		public ProxyConnection AddConnection( ProxyConnection conn)
 		{	
-			ProxyConnection conn = null;
 			lock(this)
 			{
-				logger.info("Allocating ProxyConnection#{0} for new connection.", m_connCount);
-				conn = new ProxyConnection(); //create a new one
-				
+                WinTunnel.WriteTextToConsole(string.Format("Allocating ProxyConnection#{0} for new connection.", m_connCount));
 				m_connections.Add(conn);
 				conn.connNumber = m_connCount++;
 			}
@@ -50,40 +32,37 @@ namespace WinTunnel
 
 		public bool Release(ProxyConnection conn)
 		{
-			m_releaseCount++;
+            lock (this)
+            {
+        
+                if (conn.clientSocket != null)
+                {
+                    WinTunnel.WriteTextToConsole(String.Format(" Releasing ProxyConnection#{0}: Client {1}, Server {2}.",
+                        conn.connNumber,
+                        conn.clientSocket.RemoteEndPoint.ToString(),
+                        conn.serverEP.ToString()));
+                }
+                else
+                {
+                    WinTunnel.WriteTextToConsole(string.Format("Releasing ProxyConnection#{0}: Server {1}.",
+                        conn.connNumber,
+                        conn.serverEP));
+                }
 
-			if (conn.clientSocket != null)
-			{
-				logger.info("[{0}] Releasing ProxyConnection#{1}: Client {2}, Server {3}.",
-					conn.serviceName, conn.connNumber, 
-					conn.clientSocket.RemoteEndPoint.ToString(),
-					conn.serverEP.ToString());
-			}
-			else
-			{
-				logger.info("[{0}] Releasing ProxyConnection#{1}: Server {2}.", 
-					conn.serviceName, conn.connNumber, 
-					conn.serverEP);
-			}
+                conn.disconnect();
+                m_connections.Remove(conn);
 
-			conn.disconnect();
-			m_connections.Remove(conn);
-
-			if (m_releaseCount%100 == 0)
-			{
-				logger.info("Process is currently using {0} bytes of memory.", System.GC.GetTotalMemory(true));
-			}
-
+            }
 			return true;
 		}
 
 		public bool shutdown()
 		{
-			logger.info("There are {0} connections in the Connection List.", m_connections.Count);
+            WinTunnel.WriteTextToConsole(string.Format("There are {0} connections in the Connection List.", m_connections.Count));
 
 			foreach (ProxyConnection conn in m_connections)
 			{
-				logger.info("[{0}] Disconnecting conn#{1}...", conn.serviceName, conn.connNumber);
+				WinTunnel.WriteTextToConsole(string.Format("Disconnecting conn#{0}...", conn.connNumber));
 				conn.disconnect();
 			}
 			m_connections.Clear(); //remove from the array list

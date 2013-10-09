@@ -2,7 +2,7 @@ using System;
 using System.Net.Sockets;
 using System.Net;
 
-namespace WinTunnel
+namespace WinProxy
 {
 	/// <summary>
 	/// Summary description for ProxyConnection.
@@ -10,8 +10,6 @@ namespace WinTunnel
 	public class ProxyConnection
 	{
 		public int connNumber;
-
-		public String serviceName;
 
 		public bool isShutdown = false;
 
@@ -30,14 +28,6 @@ namespace WinTunnel
 		public byte[] clientSendBuffer = new byte[BUFFER_SIZE];
 		public int serverNumBytes;
 		public byte[] serverSendBuffer = new byte[BUFFER_SIZE];
-		
-		private static ConnectionManager m_mgr = ConnectionManager.getInstance();
-		private static Logger logger = Logger.getInstance();
-
-		public void Release()
-		{
-			m_mgr.Release(this);
-		}
 
 		public void disconnect()
 		{
@@ -46,24 +36,26 @@ namespace WinTunnel
 			{
 				if (serverSocket != null)
 				{
-					if (serverSocket.Connected)	serverSocket.Shutdown(SocketShutdown.Both);
+					if (serverSocket.Connected)	
+                        serverSocket.Shutdown(SocketShutdown.Both);
 					serverSocket.Close();
 				}
 
 				if (clientSocket != null)
 				{
-					if (clientSocket.Connected) clientSocket.Shutdown(SocketShutdown.Both);
+					if (clientSocket.Connected) 
+                        clientSocket.Shutdown(SocketShutdown.Both);
 					clientSocket.Close();
 				}
 				
 			}
 			catch (SocketException se)
 			{
-				logger.error("Socket Error occurred while shutting down sockets: {0}.", se);
+				WinTunnel.WriteTextToConsole(string.Format("Socket Error occurred while shutting down sockets: {0}.", se));
 			}
 			catch (Exception e)
 			{
-				logger.error("Error occurred while shutting down sockets: {0}.", e);
+				WinTunnel.WriteTextToConsole(string.Format("Error occurred while shutting down sockets: {0}.", e));
 			}
 			finally
 			{

@@ -39,7 +39,7 @@ namespace WinProxy
                 {
                     WinTunnel.WriteTextToConsole(String.Format(" Releasing ProxyConnection#{0}: Client {1}, Server {2}.",
                         conn.connNumber,
-                        conn.clientSocket.RemoteEndPoint.ToString(),
+                        conn.clientSocket.Client.RemoteEndPoint.ToString(),
                         conn.serverEP.ToString()));
                 }
                 else

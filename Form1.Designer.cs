@@ -37,16 +37,18 @@
             this.label3 = new System.Windows.Forms.Label();
             this.txtLogFileLocation = new System.Windows.Forms.TextBox();
             this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabConsole = new System.Windows.Forms.TabPage();
             this.tabLog = new System.Windows.Forms.TabPage();
-            this.txtLog = new System.Windows.Forms.TextBox();
             this.btnClearLogText = new System.Windows.Forms.Button();
-            this.txtConsole = new System.Windows.Forms.TextBox();
+            this.txtLog = new System.Windows.Forms.TextBox();
+            this.tabConsole = new System.Windows.Forms.TabPage();
             this.txtClearConsole = new System.Windows.Forms.Button();
+            this.txtConsole = new System.Windows.Forms.TextBox();
             this.chxLogToFile = new System.Windows.Forms.CheckBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.txtForwardPort = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
-            this.tabConsole.SuspendLayout();
             this.tabLog.SuspendLayout();
+            this.tabConsole.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnStart
@@ -91,9 +93,9 @@
             // 
             this.txtForwardAddress.Location = new System.Drawing.Point(141, 35);
             this.txtForwardAddress.Name = "txtForwardAddress";
-            this.txtForwardAddress.Size = new System.Drawing.Size(232, 20);
+            this.txtForwardAddress.Size = new System.Drawing.Size(191, 20);
             this.txtForwardAddress.TabIndex = 4;
-            this.txtForwardAddress.Text = "torn00461340a.dhcp.tor2.sap.corp:80";
+            this.txtForwardAddress.Text = "www.google.com";
             // 
             // label2
             // 
@@ -123,25 +125,16 @@
             // 
             // tabControl1
             // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabLog);
             this.tabControl1.Controls.Add(this.tabConsole);
             this.tabControl1.Location = new System.Drawing.Point(12, 97);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(562, 462);
+            this.tabControl1.Size = new System.Drawing.Size(624, 462);
             this.tabControl1.TabIndex = 8;
-            // 
-            // tabConsole
-            // 
-            this.tabConsole.Controls.Add(this.txtClearConsole);
-            this.tabConsole.Controls.Add(this.txtConsole);
-            this.tabConsole.Location = new System.Drawing.Point(4, 22);
-            this.tabConsole.Name = "tabConsole";
-            this.tabConsole.Padding = new System.Windows.Forms.Padding(3);
-            this.tabConsole.Size = new System.Drawing.Size(554, 436);
-            this.tabConsole.TabIndex = 0;
-            this.tabConsole.Text = "Console Output";
-            this.tabConsole.UseVisualStyleBackColor = true;
             // 
             // tabLog
             // 
@@ -150,19 +143,10 @@
             this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(554, 436);
+            this.tabLog.Size = new System.Drawing.Size(616, 436);
             this.tabLog.TabIndex = 1;
             this.tabLog.Text = "Http Log";
             this.tabLog.UseVisualStyleBackColor = true;
-            // 
-            // txtLog
-            // 
-            this.txtLog.Location = new System.Drawing.Point(3, 0);
-            this.txtLog.Multiline = true;
-            this.txtLog.Name = "txtLog";
-            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(545, 397);
-            this.txtLog.TabIndex = 0;
             // 
             // btnClearLogText
             // 
@@ -174,14 +158,29 @@
             this.btnClearLogText.UseVisualStyleBackColor = true;
             this.btnClearLogText.Click += new System.EventHandler(this.btnClearLogText_Click);
             // 
-            // txtConsole
+            // txtLog
             // 
-            this.txtConsole.Location = new System.Drawing.Point(0, 0);
-            this.txtConsole.Multiline = true;
-            this.txtConsole.Name = "txtConsole";
-            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtConsole.Size = new System.Drawing.Size(554, 404);
-            this.txtConsole.TabIndex = 0;
+            this.txtLog.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.txtLog.Location = new System.Drawing.Point(3, 0);
+            this.txtLog.Multiline = true;
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtLog.Size = new System.Drawing.Size(607, 397);
+            this.txtLog.TabIndex = 0;
+            // 
+            // tabConsole
+            // 
+            this.tabConsole.Controls.Add(this.txtClearConsole);
+            this.tabConsole.Controls.Add(this.txtConsole);
+            this.tabConsole.Location = new System.Drawing.Point(4, 22);
+            this.tabConsole.Name = "tabConsole";
+            this.tabConsole.Padding = new System.Windows.Forms.Padding(3);
+            this.tabConsole.Size = new System.Drawing.Size(616, 436);
+            this.tabConsole.TabIndex = 0;
+            this.tabConsole.Text = "Console Output";
+            this.tabConsole.UseVisualStyleBackColor = true;
             // 
             // txtClearConsole
             // 
@@ -193,6 +192,15 @@
             this.txtClearConsole.UseVisualStyleBackColor = true;
             this.txtClearConsole.Click += new System.EventHandler(this.txtClearConsole_Click);
             // 
+            // txtConsole
+            // 
+            this.txtConsole.Location = new System.Drawing.Point(0, 0);
+            this.txtConsole.Multiline = true;
+            this.txtConsole.Name = "txtConsole";
+            this.txtConsole.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.txtConsole.Size = new System.Drawing.Size(554, 404);
+            this.txtConsole.TabIndex = 0;
+            // 
             // chxLogToFile
             // 
             this.chxLogToFile.AutoSize = true;
@@ -203,11 +211,30 @@
             this.chxLogToFile.Text = "LogToFile";
             this.chxLogToFile.UseVisualStyleBackColor = true;
             // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(350, 38);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(29, 13);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "Port:";
+            // 
+            // txtForwardPort
+            // 
+            this.txtForwardPort.Location = new System.Drawing.Point(392, 34);
+            this.txtForwardPort.Name = "txtForwardPort";
+            this.txtForwardPort.Size = new System.Drawing.Size(56, 20);
+            this.txtForwardPort.TabIndex = 11;
+            this.txtForwardPort.Text = "80";
+            // 
             // WinProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(586, 571);
+            this.ClientSize = new System.Drawing.Size(657, 571);
+            this.Controls.Add(this.txtForwardPort);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.chxLogToFile);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.txtLogFileLocation);
@@ -221,10 +248,10 @@
             this.Name = "WinProxy";
             this.Text = "WinProxy";
             this.tabControl1.ResumeLayout(false);
-            this.tabConsole.ResumeLayout(false);
-            this.tabConsole.PerformLayout();
             this.tabLog.ResumeLayout(false);
             this.tabLog.PerformLayout();
+            this.tabConsole.ResumeLayout(false);
+            this.tabConsole.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -248,6 +275,8 @@
         private System.Windows.Forms.Button txtClearConsole;
         private System.Windows.Forms.TextBox txtConsole;
         private System.Windows.Forms.CheckBox chxLogToFile;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox txtForwardPort;
     }
 }
 

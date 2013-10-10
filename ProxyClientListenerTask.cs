@@ -10,7 +10,8 @@ namespace WinProxy
     public class ProxyClientListenerTask
     {
       
-        public Socket listenSocket = null;
+        //public Socket listenSocket = null;
+        public TcpListener tcpListener = null;
 
         private bool m_bContinue;
         private ManualResetEvent allDone;
@@ -33,23 +34,21 @@ namespace WinProxy
             {
                 m_bContinue = true;
                 allDone = new ManualResetEvent(false);
-
-                listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                listenSocket.Bind(m_local);
-                listenSocket.Listen(100); //allow up to 100 pending connections
-
+                tcpListener = new TcpListener(m_local);
+                tcpListener.Start();
+            
                 while (m_bContinue)
                 {
                     WinTunnel.WriteTextToConsole(String.Format("Waiting for client connection at {0}...", m_local.ToString()));
 
                     allDone.Reset();
-                    listenSocket.BeginAccept(new AsyncCallback(ProxyClientListenerTask.acceptCallBack), this);
+                    tcpListener.BeginAcceptTcpClient( new AsyncCallback(DoAcceptTcpClientCallback), this);
                     allDone.WaitOne();
                 }
              }
             finally
             {
-                listenSocket.Close();
+                tcpListener.Stop();
                 WinTunnel.WriteTextToConsole(String.Format("client connection loop end {0}...", m_local.ToString()));
             }
         }
@@ -63,7 +62,7 @@ namespace WinProxy
         #endregion
 
         //Call back when the server listener socket has connected to a client request
-        public static void acceptCallBack(IAsyncResult ar)
+        public static void DoAcceptTcpClientCallback(IAsyncResult ar)
         {
             ProxyConnection conn = null;
 
@@ -79,17 +78,17 @@ namespace WinProxy
 
                     conn = new ProxyConnection();
 
-                    conn.clientSocket = listener.listenSocket.EndAccept(ar); //accept the client connection
+                    conn.clientSocket = listener.tcpListener.EndAcceptTcpClient(ar); //accept the client connection
 
                     WinTunnel.WriteTextToConsole(string.Format("Conn#{0} Accepted new connection. Local: {1}, Remote: {2}.",
                         conn.connNumber,
-                        conn.clientSocket.LocalEndPoint.ToString(),
-                        conn.clientSocket.RemoteEndPoint.ToString()));
+                        conn.clientSocket.Client.LocalEndPoint.ToString(),
+                        conn.clientSocket.Client.RemoteEndPoint.ToString()));
 
                     conn.serverEP = listener.m_server;
 
-                    conn.serverSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    conn.serverSocket.BeginConnect(conn.serverEP, new AsyncCallback(ProxySwapDataTask.connectForwardServerCallBack), conn);
+                    conn.serverSocket = new TcpClient(AddressFamily.InterNetwork);
+                    conn.serverSocket.BeginConnect(conn.serverEP.Address, conn.serverEP.Port, new AsyncCallback(ProxySwapDataTask.connectForwardServerCallBack), conn);
                 }
             }
             catch (SocketException se)

@@ -29,14 +29,13 @@ namespace WinProxy
             WinTunnel.WriteTextToConsole(string.Format("ProxyConnection#{0}-- client socket or server socket start receiving data....",
                     conn.connNumber));
             WinTunnel.connMgr.AddConnection(conn);
+ 
+            NetworkStream clientStream = conn.clientSocket.GetStream();
+            clientStream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(clientReadCallBack), conn);
 
-                //Read data from the client socket
-                conn.clientSocket.BeginReceive(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 0,
-                    new AsyncCallback(clientReadCallBack), conn);
-
+            NetworkStream serverStream = conn.serverSocket.GetStream();
                 //Read data from the server socket
-                conn.serverSocket.BeginReceive(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 0,
-                    new AsyncCallback(serverReadCallBack), conn);
+            serverStream.BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(serverReadCallBack), conn);
 
         }
 
@@ -55,7 +54,7 @@ namespace WinProxy
                 {
                     if (conn.clientSocket != null)
                     {
-                        numBytes = conn.clientSocket.EndReceive(ar);
+                        numBytes = conn.clientSocket.GetStream().EndRead(ar);
                         WinTunnel.WriteTextToConsole(string.Format("client socket receives data: {0}", numBytes));
 
                         if (numBytes > 0) //write to the server side socket
@@ -68,11 +67,10 @@ namespace WinProxy
                                 conn.connNumber);
 
                             conn.serverNumBytes += numBytes;
-                            int sent = conn.serverSocket.Send(conn.serverSendBuffer, numBytes, SocketFlags.None);
-                            System.Diagnostics.Debug.Assert(sent == numBytes);
-
+                            conn.serverSocket.GetStream().Write(conn.serverSendBuffer, 0, numBytes);
+                           
                             //continue to read
-                            conn.clientSocket.BeginReceive(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 0,
+                            conn.clientSocket.GetStream().BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 
                                 new AsyncCallback(clientReadCallBack), conn);
                         }
                         else
@@ -123,7 +121,7 @@ namespace WinProxy
             {
                 try
                 {
-                    numBytes = conn.serverSocket.EndReceive(ar);
+                    numBytes = conn.serverSocket.GetStream().EndRead(ar);
                     WinTunnel.WriteTextToConsole(string.Format("server socket receives data: {0}", numBytes));
 
                     if (numBytes > 0) //write to the client side socket
@@ -136,10 +134,9 @@ namespace WinProxy
                              conn.connNumber);
 
                         conn.clientNumBytes += numBytes;
-                        int iSent = conn.clientSocket.Send(conn.clientSendBuffer, numBytes, SocketFlags.None);
-                        System.Diagnostics.Debug.Assert(iSent == numBytes);
-
-                        conn.serverSocket.BeginReceive(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 0,
+                        conn.clientSocket.GetStream().Write(conn.clientSendBuffer, 0, numBytes);
+                        
+                        conn.serverSocket.GetStream().BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE,
                             new AsyncCallback(serverReadCallBack), conn);
 
                     }

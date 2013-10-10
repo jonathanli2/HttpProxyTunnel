@@ -12,11 +12,11 @@ namespace WinProxy
 {
 	public class WinTunnel 
 	{
-        public String m_strListeningPort,  m_strForwardAddress,  m_strLogFileLocation;
+        public String m_strListeningPort,  m_strForwardAddress,  m_strLogFileLocation, m_strForwardPort;
         private bool m_bLogToFile;
         public IPEndPoint m_localEP;
         public IPEndPoint m_serverEP;
-
+  
         public delegate void WriteToConsole(string message);
         private static WriteToConsole m_delWriteToConsole;
         private static WriteToConsole m_delWriteToLog;
@@ -24,11 +24,12 @@ namespace WinProxy
 		public static ConnectionManager connMgr;
         ProxyClientListenerTask task;
 
-		public WinTunnel(String strListeningPort, string strForwardAddress, string strLogFileLocation, 
+		public WinTunnel(String strListeningPort, string strForwardAddress, string strForwardPort, string strLogFileLocation, 
             WriteToConsole delWriteToConsole, WriteToConsole delWriteToLog, bool bLogToFile )
 		{
             m_strListeningPort = strListeningPort;
             m_strForwardAddress = strForwardAddress;
+            m_strForwardPort = strForwardPort;
             m_strLogFileLocation = strLogFileLocation;
             m_delWriteToConsole = delWriteToConsole;
             m_delWriteToLog = delWriteToLog;
@@ -77,7 +78,7 @@ namespace WinProxy
             Logger.initialize(m_strLogFileLocation, m_bLogToFile);
   
             //Load configuration and startup
-            loadConfiguration(m_strListeningPort, m_strForwardAddress);
+            loadConfiguration(m_strListeningPort, m_strForwardAddress, m_strForwardPort);
            
             connMgr = new ConnectionManager();
 
@@ -88,43 +89,21 @@ namespace WinProxy
 
         }
 
-        public void loadConfiguration(string strListeningPort, string strForwardAddress)
+        public void loadConfiguration(string strListeningPort, string strForwardAddress, string strForwardPort)
         {
 
             try
-            {
-
-                int idx;
+            {             
                 String listenPort;
-                String listenIP;
                 String targetPort;
                 String targetIP;
 
-                idx = strListeningPort.IndexOf(":");
-                if (idx > 0)
-                {
-                    listenIP = strListeningPort.Substring(0, idx);
-                    listenPort = strListeningPort.Substring(idx + 1);
-                    m_localEP = new IPEndPoint(IPAddress.Parse(listenIP), Int32.Parse(listenPort));
-                }
-                else
-                {
-                    listenPort = strListeningPort;
-                    m_localEP = new IPEndPoint(IPAddress.Any, Int32.Parse(listenPort));
-                }
+                listenPort = strListeningPort;
+                m_localEP = new IPEndPoint(IPAddress.Any, Int32.Parse(listenPort));
 
-                idx = strForwardAddress.IndexOf(":");
-                if (idx != -1)
-                {
-                    targetIP = strForwardAddress.Substring(0, idx);
-                    targetPort = strForwardAddress.Substring(idx + 1);
-                }
-                else
-                {
-                    targetIP = strForwardAddress;
-                    targetPort = "80";
-                }
-
+                targetIP = strForwardAddress;
+                targetPort = strForwardPort;
+                
                 IPAddress ip;
                 if (!IPAddress.TryParse(targetIP, out ip))
                 {
@@ -135,7 +114,6 @@ namespace WinProxy
                 }
 
                 m_serverEP = new IPEndPoint(ip, Int32.Parse(targetPort));
-
             }
             catch (Exception e)
             {

@@ -13,11 +13,11 @@ namespace WinProxy
 
 		public bool isShutdown = false;
 
-		public Socket clientSocket; //socket for communication with the client
+		public TcpClient clientSocket; //socket for communication with the client
 		
 		public IPEndPoint serverEP;
 
-		public Socket serverSocket; //Socket for communication with the server
+		public TcpClient serverSocket; //Socket for communication with the server
 
 		public const int BUFFER_SIZE = 8092;
 
@@ -36,15 +36,11 @@ namespace WinProxy
 			{
 				if (serverSocket != null)
 				{
-					if (serverSocket.Connected)	
-                        serverSocket.Shutdown(SocketShutdown.Both);
 					serverSocket.Close();
 				}
 
 				if (clientSocket != null)
 				{
-					if (clientSocket.Connected) 
-                        clientSocket.Shutdown(SocketShutdown.Both);
 					clientSocket.Close();
 				}
 				

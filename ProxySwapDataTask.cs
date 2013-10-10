@@ -4,6 +4,7 @@ using System.Net.Sockets;
 using System.Net.Security;
 using System.IO;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 
 namespace WinProxy
 {
@@ -33,18 +34,42 @@ namespace WinProxy
                     conn.connNumber));
             WinTunnel.connMgr.AddConnection(conn);
 
-            Stream stream = conn.clientSocket.GetStream();
+            conn.clientStream =  conn.clientSocket.GetStream();
             if (conn.m_bHttpsClient)
             {
                 SslStream sslStream = new SslStream(conn.clientSocket.GetStream(), false);
                 sslStream.AuthenticateAsServer(WinTunnel.CertificateForClientConnection, false, SslProtocols.Tls, true);
+                conn.clientStream = sslStream;
             }
-            stream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(clientReadCallBack), conn);
 
-            NetworkStream serverStream = conn.serverSocket.GetStream();
-                //Read data from the server socket
-            serverStream.BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(serverReadCallBack), conn);
+            conn.serverStream = conn.serverSocket.GetStream();
+            if (conn.m_bHttpsServer)
+            {
+                SslStream sslStream = new SslStream(conn.serverStream, false, new RemoteCertificateValidationCallback(ValidateServerCertificate), null);
+                sslStream.AuthenticateAsClient(conn.serverName);
+                conn.serverStream = sslStream;
+            }
+            
+            conn.clientStream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(clientReadCallBack), conn);
+            //Read data from the server socket
+            conn.serverStream.BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(serverReadCallBack), conn);
 
+        }
+
+        // The following method is invoked by the RemoteCertificateValidationDelegate. 
+        public static bool ValidateServerCertificate(
+              object sender,
+              X509Certificate certificate,
+              X509Chain chain,
+              SslPolicyErrors sslPolicyErrors)
+        {
+            if (sslPolicyErrors == SslPolicyErrors.None)
+                return true;
+
+            Console.WriteLine("Certificate error: {0}", sslPolicyErrors);
+
+            // Do not allow this client to communicate with unauthenticated servers. 
+            return false;
         }
 
      
@@ -62,7 +87,7 @@ namespace WinProxy
                 {
                     if (conn.clientSocket != null)
                     {
-                        numBytes = conn.clientSocket.GetStream().EndRead(ar);
+                        numBytes = conn.clientStream.EndRead(ar);
                         WinTunnel.WriteTextToConsole(string.Format("client socket receives data: {0}", numBytes));
 
                         if (numBytes > 0) //write to the server side socket
@@ -75,10 +100,10 @@ namespace WinProxy
                                 conn.connNumber);
 
                             conn.serverNumBytes += numBytes;
-                            conn.serverSocket.GetStream().Write(conn.serverSendBuffer, 0, numBytes);
+                            conn.serverStream.Write(conn.serverSendBuffer, 0, numBytes);
                            
                             //continue to read
-                            conn.clientSocket.GetStream().BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 
+                            conn.clientStream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, 
                                 new AsyncCallback(clientReadCallBack), conn);
                         }
                         else
@@ -129,7 +154,7 @@ namespace WinProxy
             {
                 try
                 {
-                    numBytes = conn.serverSocket.GetStream().EndRead(ar);
+                    numBytes = conn.serverStream.EndRead(ar);
                     WinTunnel.WriteTextToConsole(string.Format("server socket receives data: {0}", numBytes));
 
                     if (numBytes > 0) //write to the client side socket
@@ -142,9 +167,9 @@ namespace WinProxy
                              conn.connNumber);
 
                         conn.clientNumBytes += numBytes;
-                        conn.clientSocket.GetStream().Write(conn.clientSendBuffer, 0, numBytes);
+                        conn.clientStream.Write(conn.clientSendBuffer, 0, numBytes);
                         
-                        conn.serverSocket.GetStream().BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE,
+                        conn.serverStream.BeginRead(conn.serverReadBuffer, 0, ProxyConnection.BUFFER_SIZE,
                             new AsyncCallback(serverReadCallBack), conn);
 
                     }

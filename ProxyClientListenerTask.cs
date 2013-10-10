@@ -16,15 +16,17 @@ namespace WinProxy
         private bool m_bContinue;
         private ManualResetEvent allDone;
         IPEndPoint m_local;
-        IPEndPoint m_server;
+        private string m_serverName;
+        private int m_serverPort;
         public static bool m_bHttpsClient;
         public static bool m_bHttpsServer;
    
-        public ProxyClientListenerTask(IPEndPoint local, IPEndPoint server, bool bHttpsClient, bool bHttpsServer)
+        public ProxyClientListenerTask(IPEndPoint local, string serverName, int serverPort, bool bHttpsClient, bool bHttpsServer)
         {
             Console.WriteLine("ProxyClientListenerTask {0} created.", this);
             m_local = local;
-            m_server = server;
+            m_serverName = serverName;
+            m_serverPort = serverPort;
             m_bHttpsClient = bHttpsClient;
             m_bHttpsServer = bHttpsServer;
         }
@@ -88,10 +90,14 @@ namespace WinProxy
                         conn.clientSocket.Client.LocalEndPoint.ToString(),
                         conn.clientSocket.Client.RemoteEndPoint.ToString()));
 
-                    conn.serverEP = listener.m_server;
+                    conn.serverName = listener.m_serverName;
+                    conn.serverPort = listener.m_serverPort;
+                    IPHostEntry hostInfo = Dns.GetHostEntry(conn.serverName);
+                    // Get the DNS IP addresses associated with the host.
+                    IPAddress[] IPaddresses = hostInfo.AddressList;
 
                     conn.serverSocket = new TcpClient(AddressFamily.InterNetwork);
-                    conn.serverSocket.BeginConnect(conn.serverEP.Address, conn.serverEP.Port, new AsyncCallback(ProxySwapDataTask.connectForwardServerCallBack), conn);
+                    conn.serverSocket.BeginConnect(IPaddresses[0], conn.serverPort, new AsyncCallback(ProxySwapDataTask.connectForwardServerCallBack), conn);
                 }
             }
             catch (SocketException se)

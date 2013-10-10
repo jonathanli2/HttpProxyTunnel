@@ -29,7 +29,7 @@ namespace WinProxy
             {
                 tunnel = new WinTunnel(txtListeningPort.Text, txtForwardAddress.Text, txtForwardPort.Text, chxHttpsClient.Checked, chxHttpsServer.Checked,
                     txtLogFileLocation.Text, new WinTunnel.WriteToConsole(WriteToConsole), new WinTunnel.WriteToConsole(WriteToLog), chxLogToFile.Checked,
-                    txtCertForClientConnection.Text);
+                    txtCertForClientConnection.Text, txtClientConnectionCertPassword.Text);
                 tunnel.Start();
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;

@@ -67,12 +67,9 @@ namespace WinProxy
 
         public static void log(byte[] data, int start, int end, String msg, params object[] vars)
         {
-            if (s_logger != null)
-            {
                 String strData = Encoding.UTF8.GetString(data, start, end);
                 String convertedMsg = s_logger.convertToLogMsg(msg, vars);
                 s_logger.writeToLog(convertedMsg + "\r\n"+ strData +"\r\n");
-            }
         }
 
 		private String convertToLogMsg( String msg, object[] vars)

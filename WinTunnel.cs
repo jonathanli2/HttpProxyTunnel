@@ -16,11 +16,12 @@ namespace WinProxy
         public String m_strListeningPort,  m_strForwardAddress,  m_strLogFileLocation, m_strForwardPort;
         private bool m_bLogToFile;
         public IPEndPoint m_localEP;
-        public IPEndPoint m_serverEP;
+        public string m_serverName;
+        public int m_serverPort;
         private bool m_bHttpsClient;
         private bool m_bHttpsServer;
 
-        public static X509Certificate CertificateForClientConnection = null;
+        public static X509Certificate2 CertificateForClientConnection = null;
        
         public delegate void WriteToConsole(string message);
         private static WriteToConsole m_delWriteToConsole;
@@ -31,7 +32,7 @@ namespace WinProxy
 
 		public WinTunnel(String strListeningPort, string strForwardAddress, string strForwardPort, bool bHttpsClient, bool bHttpsServer,
             string strLogFileLocation, WriteToConsole delWriteToConsole, WriteToConsole delWriteToLog, bool bLogToFile,
-            string strCertForClientConnection)
+            string strCertForClientConnection, string strClientConnectionCertPassword)
 		{
             m_strListeningPort = strListeningPort;
             m_strForwardAddress = strForwardAddress;
@@ -44,7 +45,7 @@ namespace WinProxy
             m_bLogToFile = bLogToFile;
             if (bHttpsClient)
             {
-                CertificateForClientConnection = X509Certificate.CreateFromCertFile(strCertForClientConnection);
+                CertificateForClientConnection = new X509Certificate2(strCertForClientConnection, strClientConnectionCertPassword);
             }
 		}
 
@@ -86,52 +87,19 @@ namespace WinProxy
          
             WriteTextToConsole("Starting thread... ");
          
-            if (m_bHttpsClient)
-
             Logger.initialize(m_strLogFileLocation, m_bLogToFile);
-  
-            //Load configuration and startup
-            loadConfiguration(m_strListeningPort, m_strForwardAddress, m_strForwardPort);
-           
+   
+            m_localEP = new IPEndPoint(IPAddress.Any, Int32.Parse(m_strListeningPort));
+
+            m_serverName = m_strForwardAddress;
+            m_serverPort = Int32.Parse(m_strForwardPort);
+
             connMgr = new ConnectionManager();
 
-
-            task = new ProxyClientListenerTask(m_localEP, m_serverEP, m_bHttpsClient, m_bHttpsServer);
+            task = new ProxyClientListenerTask(m_localEP, m_serverName, m_serverPort, m_bHttpsClient, m_bHttpsServer);
             Thread t = new Thread(task.run);
             t.Start();
 
-        }
-
-        public void loadConfiguration(string strListeningPort, string strForwardAddress, string strForwardPort)
-        {
-
-            try
-            {             
-                String listenPort;
-                String targetPort;
-                String targetIP;
-
-                listenPort = strListeningPort;
-                m_localEP = new IPEndPoint(IPAddress.Any, Int32.Parse(listenPort));
-
-                targetIP = strForwardAddress;
-                targetPort = strForwardPort;
-                
-                IPAddress ip;
-                if (!IPAddress.TryParse(targetIP, out ip))
-                {
-                    IPHostEntry hostEntry;
-
-                    hostEntry = Dns.GetHostEntry(targetIP);
-                    ip = hostEntry.AddressList[0];
-                }
-
-                m_serverEP = new IPEndPoint(ip, Int32.Parse(targetPort));
-            }
-            catch (Exception e)
-            {
-                WinTunnel.WriteTextToConsole(string.Format("The exception is {0}.", e));
-            }
         }
 	}
 }

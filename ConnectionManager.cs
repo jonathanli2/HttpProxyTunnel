@@ -40,13 +40,13 @@ namespace WinProxy
                     WinTunnel.WriteTextToConsole(String.Format(" Releasing ProxyConnection#{0}: Client {1}, Server {2}.",
                         conn.connNumber,
                         conn.clientSocket.Client.RemoteEndPoint.ToString(),
-                        conn.serverEP.ToString()));
+                        conn.serverName+conn.serverPort));
                 }
                 else
                 {
                     WinTunnel.WriteTextToConsole(string.Format("Releasing ProxyConnection#{0}: Server {1}.",
                         conn.connNumber,
-                        conn.serverEP));
+                        conn.serverName + conn.serverPort));
                 }
 
                 conn.disconnect();

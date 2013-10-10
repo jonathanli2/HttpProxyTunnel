@@ -49,6 +49,9 @@
             this.chxHttpsClient = new System.Windows.Forms.CheckBox();
             this.txtCertForClientConnection = new System.Windows.Forms.TextBox();
             this.chxHttpsServer = new System.Windows.Forms.CheckBox();
+            this.txtClientConnectionCertPassword = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabConsole.SuspendLayout();
@@ -56,9 +59,9 @@
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(490, 70);
+            this.btnStart.Location = new System.Drawing.Point(533, 71);
             this.btnStart.Name = "btnStart";
-            this.btnStart.Size = new System.Drawing.Size(75, 23);
+            this.btnStart.Size = new System.Drawing.Size(51, 23);
             this.btnStart.TabIndex = 0;
             this.btnStart.Text = "Start";
             this.btnStart.UseVisualStyleBackColor = true;
@@ -67,9 +70,9 @@
             // btnStop
             // 
             this.btnStop.Enabled = false;
-            this.btnStop.Location = new System.Drawing.Point(588, 70);
+            this.btnStop.Location = new System.Drawing.Point(603, 71);
             this.btnStop.Name = "btnStop";
-            this.btnStop.Size = new System.Drawing.Size(75, 23);
+            this.btnStop.Size = new System.Drawing.Size(60, 23);
             this.btnStop.TabIndex = 1;
             this.btnStop.Text = "Stop";
             this.btnStop.UseVisualStyleBackColor = true;
@@ -98,7 +101,7 @@
             this.txtForwardAddress.Name = "txtForwardAddress";
             this.txtForwardAddress.Size = new System.Drawing.Size(191, 20);
             this.txtForwardAddress.TabIndex = 4;
-            this.txtForwardAddress.Text = "www.google.com";
+            this.txtForwardAddress.Text = "torn00461340a.dhcp.tor2.sap.corp";
             // 
             // label2
             // 
@@ -122,7 +125,7 @@
             // 
             this.txtLogFileLocation.Location = new System.Drawing.Point(119, 73);
             this.txtLogFileLocation.Name = "txtLogFileLocation";
-            this.txtLogFileLocation.Size = new System.Drawing.Size(191, 20);
+            this.txtLogFileLocation.Size = new System.Drawing.Size(136, 20);
             this.txtLogFileLocation.TabIndex = 7;
             this.txtLogFileLocation.Text = "c:\\temp\\log.txt";
             // 
@@ -180,7 +183,7 @@
             this.tabConsole.Location = new System.Drawing.Point(4, 22);
             this.tabConsole.Name = "tabConsole";
             this.tabConsole.Padding = new System.Windows.Forms.Padding(3);
-            this.tabConsole.Size = new System.Drawing.Size(634, 436);
+            this.tabConsole.Size = new System.Drawing.Size(634, 434);
             this.tabConsole.TabIndex = 0;
             this.tabConsole.Text = "Console Output";
             this.tabConsole.UseVisualStyleBackColor = true;
@@ -207,7 +210,7 @@
             // chxLogToFile
             // 
             this.chxLogToFile.AutoSize = true;
-            this.chxLogToFile.Location = new System.Drawing.Point(355, 76);
+            this.chxLogToFile.Location = new System.Drawing.Point(261, 76);
             this.chxLogToFile.Name = "chxLogToFile";
             this.chxLogToFile.Size = new System.Drawing.Size(73, 17);
             this.chxLogToFile.TabIndex = 9;
@@ -229,40 +232,74 @@
             this.txtForwardPort.Name = "txtForwardPort";
             this.txtForwardPort.Size = new System.Drawing.Size(41, 20);
             this.txtForwardPort.TabIndex = 11;
-            this.txtForwardPort.Text = "80";
+            this.txtForwardPort.Text = "8081";
             // 
             // chxHttpsClient
             // 
             this.chxHttpsClient.AutoSize = true;
+            this.chxHttpsClient.Checked = true;
+            this.chxHttpsClient.CheckState = System.Windows.Forms.CheckState.Checked;
             this.chxHttpsClient.Location = new System.Drawing.Point(32, 42);
             this.chxHttpsClient.Name = "chxHttpsClient";
-            this.chxHttpsClient.Size = new System.Drawing.Size(80, 17);
+            this.chxHttpsClient.Size = new System.Drawing.Size(184, 17);
             this.chxHttpsClient.TabIndex = 13;
-            this.chxHttpsClient.Text = "https client ";
+            this.chxHttpsClient.Text = "Enable https for client connection";
             this.chxHttpsClient.UseVisualStyleBackColor = true;
             // 
             // txtCertForClientConnection
             // 
-            this.txtCertForClientConnection.Location = new System.Drawing.Point(118, 41);
+            this.txtCertForClientConnection.Location = new System.Drawing.Point(263, 39);
             this.txtCertForClientConnection.Name = "txtCertForClientConnection";
-            this.txtCertForClientConnection.Size = new System.Drawing.Size(191, 20);
+            this.txtCertForClientConnection.Size = new System.Drawing.Size(254, 20);
             this.txtCertForClientConnection.TabIndex = 14;
+            this.txtCertForClientConnection.Text = "C:\\SharedFolder\\SMP\\gen_cert\\mykeystore.p12";
             // 
             // chxHttpsServer
             // 
             this.chxHttpsServer.AutoSize = true;
-            this.chxHttpsServer.Location = new System.Drawing.Point(355, 43);
+            this.chxHttpsServer.Checked = true;
+            this.chxHttpsServer.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chxHttpsServer.Location = new System.Drawing.Point(355, 77);
             this.chxHttpsServer.Name = "chxHttpsServer";
-            this.chxHttpsServer.Size = new System.Drawing.Size(81, 17);
+            this.chxHttpsServer.Size = new System.Drawing.Size(172, 17);
             this.chxHttpsServer.TabIndex = 15;
-            this.chxHttpsServer.Text = "https server";
+            this.chxHttpsServer.Text = "use https for server connection";
             this.chxHttpsServer.UseVisualStyleBackColor = true;
+            // 
+            // txtClientConnectionCertPassword
+            // 
+            this.txtClientConnectionCertPassword.Location = new System.Drawing.Point(603, 40);
+            this.txtClientConnectionCertPassword.Name = "txtClientConnectionCertPassword";
+            this.txtClientConnectionCertPassword.Size = new System.Drawing.Size(56, 20);
+            this.txtClientConnectionCertPassword.TabIndex = 16;
+            this.txtClientConnectionCertPassword.Text = "s3pAdmin";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(223, 42);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(32, 13);
+            this.label5.TabIndex = 17;
+            this.label5.Text = "Path:";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(544, 43);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(56, 13);
+            this.label6.TabIndex = 18;
+            this.label6.Text = "Password:";
             // 
             // WinProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(675, 571);
+            this.Controls.Add(this.label6);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.txtClientConnectionCertPassword);
             this.Controls.Add(this.chxHttpsServer);
             this.Controls.Add(this.txtCertForClientConnection);
             this.Controls.Add(this.chxHttpsClient);
@@ -313,6 +350,9 @@
         private System.Windows.Forms.CheckBox chxHttpsClient;
         private System.Windows.Forms.TextBox txtCertForClientConnection;
         private System.Windows.Forms.CheckBox chxHttpsServer;
+        private System.Windows.Forms.TextBox txtClientConnectionCertPassword;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
     }
 }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Net.Sockets;
 using System.Net;
+using System.IO;
 
 namespace WinProxy
 {
@@ -13,13 +14,17 @@ namespace WinProxy
         public bool m_bHttpsClient;
         public bool m_bHttpsServer;
 
+
+
 		public bool isShutdown = false;
 
 		public TcpClient clientSocket; //socket for communication with the client
-		
-		public IPEndPoint serverEP;
+        public Stream clientStream; //Networkstream or SslStream
+		public string serverName;
+        public int serverPort;
 
 		public TcpClient serverSocket; //Socket for communication with the server
+        public Stream serverStream;
 
 		public const int BUFFER_SIZE = 8092;
 
@@ -65,8 +70,7 @@ namespace WinProxy
 			{
 				serverSocket = null;
 				clientSocket = null;
-				serverEP = null;
-
+			
 				clientReadBuffer = null;
 				clientSendBuffer = null;
 

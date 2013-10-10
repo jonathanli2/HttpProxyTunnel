@@ -10,6 +10,8 @@ namespace WinProxy
 	public class ProxyConnection
 	{
 		public int connNumber;
+        public bool m_bHttpsClient;
+        public bool m_bHttpsServer;
 
 		public bool isShutdown = false;
 
@@ -28,6 +30,12 @@ namespace WinProxy
 		public byte[] clientSendBuffer = new byte[BUFFER_SIZE];
 		public int serverNumBytes;
 		public byte[] serverSendBuffer = new byte[BUFFER_SIZE];
+
+        public ProxyConnection(bool bHttpsClient, bool bHttpsServer)
+        {
+            m_bHttpsClient = bHttpsClient;
+            m_bHttpsServer = bHttpsServer;
+        }
 
 		public void disconnect()
 		{

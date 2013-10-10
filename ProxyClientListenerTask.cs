@@ -17,13 +17,16 @@ namespace WinProxy
         private ManualResetEvent allDone;
         IPEndPoint m_local;
         IPEndPoint m_server;
-
+        public static bool m_bHttpsClient;
+        public static bool m_bHttpsServer;
    
-        public ProxyClientListenerTask(IPEndPoint local, IPEndPoint server)
+        public ProxyClientListenerTask(IPEndPoint local, IPEndPoint server, bool bHttpsClient, bool bHttpsServer)
         {
             Console.WriteLine("ProxyClientListenerTask {0} created.", this);
             m_local = local;
             m_server = server;
+            m_bHttpsClient = bHttpsClient;
+            m_bHttpsServer = bHttpsServer;
         }
 
         #region ITask Members
@@ -76,7 +79,7 @@ namespace WinProxy
 
                     //create a new task for connecting to the server side.
 
-                    conn = new ProxyConnection();
+                    conn = new ProxyConnection(m_bHttpsClient, m_bHttpsServer);
 
                     conn.clientSocket = listener.tcpListener.EndAcceptTcpClient(ar); //accept the client connection
 

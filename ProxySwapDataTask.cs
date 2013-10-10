@@ -1,6 +1,9 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Net.Security;
+using System.IO;
+using System.Security.Authentication;
 
 namespace WinProxy
 {
@@ -29,9 +32,14 @@ namespace WinProxy
             WinTunnel.WriteTextToConsole(string.Format("ProxyConnection#{0}-- client socket or server socket start receiving data....",
                     conn.connNumber));
             WinTunnel.connMgr.AddConnection(conn);
- 
-            NetworkStream clientStream = conn.clientSocket.GetStream();
-            clientStream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(clientReadCallBack), conn);
+
+            Stream stream = conn.clientSocket.GetStream();
+            if (conn.m_bHttpsClient)
+            {
+                SslStream sslStream = new SslStream(conn.clientSocket.GetStream(), false);
+                sslStream.AuthenticateAsServer(WinTunnel.CertificateForClientConnection, false, SslProtocols.Tls, true);
+            }
+            stream.BeginRead(conn.clientReadBuffer, 0, ProxyConnection.BUFFER_SIZE, new AsyncCallback(clientReadCallBack), conn);
 
             NetworkStream serverStream = conn.serverSocket.GetStream();
                 //Read data from the server socket

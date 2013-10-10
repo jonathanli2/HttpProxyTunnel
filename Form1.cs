@@ -27,8 +27,9 @@ namespace WinProxy
         {
             try
             {
-                tunnel = new WinTunnel(txtListeningPort.Text, txtForwardAddress.Text, txtForwardPort.Text,
-                    txtLogFileLocation.Text, new WinTunnel.WriteToConsole(WriteToConsole), new WinTunnel.WriteToConsole(WriteToLog), chxLogToFile.Checked);
+                tunnel = new WinTunnel(txtListeningPort.Text, txtForwardAddress.Text, txtForwardPort.Text, chxHttpsClient.Checked, chxHttpsServer.Checked,
+                    txtLogFileLocation.Text, new WinTunnel.WriteToConsole(WriteToConsole), new WinTunnel.WriteToConsole(WriteToLog), chxLogToFile.Checked,
+                    txtCertForClientConnection.Text);
                 tunnel.Start();
                 btnStart.Enabled = false;
                 btnStop.Enabled = true;

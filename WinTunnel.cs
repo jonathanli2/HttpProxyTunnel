@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography.X509Certificates;
 
 
 namespace WinProxy
@@ -16,7 +17,11 @@ namespace WinProxy
         private bool m_bLogToFile;
         public IPEndPoint m_localEP;
         public IPEndPoint m_serverEP;
-  
+        private bool m_bHttpsClient;
+        private bool m_bHttpsServer;
+
+        public static X509Certificate CertificateForClientConnection = null;
+       
         public delegate void WriteToConsole(string message);
         private static WriteToConsole m_delWriteToConsole;
         private static WriteToConsole m_delWriteToLog;
@@ -24,17 +29,23 @@ namespace WinProxy
 		public static ConnectionManager connMgr;
         ProxyClientListenerTask task;
 
-		public WinTunnel(String strListeningPort, string strForwardAddress, string strForwardPort, string strLogFileLocation, 
-            WriteToConsole delWriteToConsole, WriteToConsole delWriteToLog, bool bLogToFile )
+		public WinTunnel(String strListeningPort, string strForwardAddress, string strForwardPort, bool bHttpsClient, bool bHttpsServer,
+            string strLogFileLocation, WriteToConsole delWriteToConsole, WriteToConsole delWriteToLog, bool bLogToFile,
+            string strCertForClientConnection)
 		{
             m_strListeningPort = strListeningPort;
             m_strForwardAddress = strForwardAddress;
             m_strForwardPort = strForwardPort;
+            m_bHttpsClient = bHttpsClient;
+            m_bHttpsServer = bHttpsServer;
             m_strLogFileLocation = strLogFileLocation;
             m_delWriteToConsole = delWriteToConsole;
             m_delWriteToLog = delWriteToLog;
             m_bLogToFile = bLogToFile;
-
+            if (bHttpsClient)
+            {
+                CertificateForClientConnection = X509Certificate.CreateFromCertFile(strCertForClientConnection);
+            }
 		}
 
         public static void WriteTextToConsole(string strConsoleText)
@@ -75,6 +86,8 @@ namespace WinProxy
          
             WriteTextToConsole("Starting thread... ");
          
+            if (m_bHttpsClient)
+
             Logger.initialize(m_strLogFileLocation, m_bLogToFile);
   
             //Load configuration and startup
@@ -83,7 +96,7 @@ namespace WinProxy
             connMgr = new ConnectionManager();
 
 
-            task = new ProxyClientListenerTask(m_localEP, m_serverEP);
+            task = new ProxyClientListenerTask(m_localEP, m_serverEP, m_bHttpsClient, m_bHttpsServer);
             Thread t = new Thread(task.run);
             t.Start();
 

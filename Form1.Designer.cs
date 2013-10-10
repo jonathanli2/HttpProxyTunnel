@@ -46,6 +46,9 @@
             this.chxLogToFile = new System.Windows.Forms.CheckBox();
             this.label4 = new System.Windows.Forms.Label();
             this.txtForwardPort = new System.Windows.Forms.TextBox();
+            this.chxHttpsClient = new System.Windows.Forms.CheckBox();
+            this.txtCertForClientConnection = new System.Windows.Forms.TextBox();
+            this.chxHttpsServer = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabLog.SuspendLayout();
             this.tabConsole.SuspendLayout();
@@ -53,7 +56,7 @@
             // 
             // btnStart
             // 
-            this.btnStart.Location = new System.Drawing.Point(489, 28);
+            this.btnStart.Location = new System.Drawing.Point(490, 70);
             this.btnStart.Name = "btnStart";
             this.btnStart.Size = new System.Drawing.Size(75, 23);
             this.btnStart.TabIndex = 0;
@@ -64,7 +67,7 @@
             // btnStop
             // 
             this.btnStop.Enabled = false;
-            this.btnStop.Location = new System.Drawing.Point(489, 59);
+            this.btnStop.Location = new System.Drawing.Point(588, 70);
             this.btnStop.Name = "btnStop";
             this.btnStop.Size = new System.Drawing.Size(75, 23);
             this.btnStop.TabIndex = 1;
@@ -75,7 +78,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(44, 12);
+            this.label1.Location = new System.Drawing.Point(29, 9);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(74, 13);
             this.label1.TabIndex = 2;
@@ -83,7 +86,7 @@
             // 
             // txtListeningPort
             // 
-            this.txtListeningPort.Location = new System.Drawing.Point(141, 9);
+            this.txtListeningPort.Location = new System.Drawing.Point(119, 6);
             this.txtListeningPort.Name = "txtListeningPort";
             this.txtListeningPort.Size = new System.Drawing.Size(113, 20);
             this.txtListeningPort.TabIndex = 3;
@@ -91,7 +94,7 @@
             // 
             // txtForwardAddress
             // 
-            this.txtForwardAddress.Location = new System.Drawing.Point(141, 35);
+            this.txtForwardAddress.Location = new System.Drawing.Point(355, 6);
             this.txtForwardAddress.Name = "txtForwardAddress";
             this.txtForwardAddress.Size = new System.Drawing.Size(191, 20);
             this.txtForwardAddress.TabIndex = 4;
@@ -100,7 +103,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(29, 38);
+            this.label2.Location = new System.Drawing.Point(260, 9);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(89, 13);
             this.label2.TabIndex = 5;
@@ -109,7 +112,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(27, 65);
+            this.label3.Location = new System.Drawing.Point(16, 76);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(91, 13);
             this.label3.TabIndex = 6;
@@ -117,9 +120,9 @@
             // 
             // txtLogFileLocation
             // 
-            this.txtLogFileLocation.Location = new System.Drawing.Point(141, 62);
+            this.txtLogFileLocation.Location = new System.Drawing.Point(119, 73);
             this.txtLogFileLocation.Name = "txtLogFileLocation";
-            this.txtLogFileLocation.Size = new System.Drawing.Size(232, 20);
+            this.txtLogFileLocation.Size = new System.Drawing.Size(191, 20);
             this.txtLogFileLocation.TabIndex = 7;
             this.txtLogFileLocation.Text = "c:\\temp\\log.txt";
             // 
@@ -130,10 +133,10 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabLog);
             this.tabControl1.Controls.Add(this.tabConsole);
-            this.tabControl1.Location = new System.Drawing.Point(12, 97);
+            this.tabControl1.Location = new System.Drawing.Point(12, 99);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(624, 462);
+            this.tabControl1.Size = new System.Drawing.Size(642, 460);
             this.tabControl1.TabIndex = 8;
             // 
             // tabLog
@@ -143,7 +146,7 @@
             this.tabLog.Location = new System.Drawing.Point(4, 22);
             this.tabLog.Name = "tabLog";
             this.tabLog.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLog.Size = new System.Drawing.Size(616, 436);
+            this.tabLog.Size = new System.Drawing.Size(634, 434);
             this.tabLog.TabIndex = 1;
             this.tabLog.Text = "Http Log";
             this.tabLog.UseVisualStyleBackColor = true;
@@ -167,7 +170,7 @@
             this.txtLog.Multiline = true;
             this.txtLog.Name = "txtLog";
             this.txtLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtLog.Size = new System.Drawing.Size(607, 397);
+            this.txtLog.Size = new System.Drawing.Size(625, 395);
             this.txtLog.TabIndex = 0;
             // 
             // tabConsole
@@ -177,7 +180,7 @@
             this.tabConsole.Location = new System.Drawing.Point(4, 22);
             this.tabConsole.Name = "tabConsole";
             this.tabConsole.Padding = new System.Windows.Forms.Padding(3);
-            this.tabConsole.Size = new System.Drawing.Size(616, 436);
+            this.tabConsole.Size = new System.Drawing.Size(634, 436);
             this.tabConsole.TabIndex = 0;
             this.tabConsole.Text = "Console Output";
             this.tabConsole.UseVisualStyleBackColor = true;
@@ -204,7 +207,7 @@
             // chxLogToFile
             // 
             this.chxLogToFile.AutoSize = true;
-            this.chxLogToFile.Location = new System.Drawing.Point(388, 63);
+            this.chxLogToFile.Location = new System.Drawing.Point(355, 76);
             this.chxLogToFile.Name = "chxLogToFile";
             this.chxLogToFile.Size = new System.Drawing.Size(73, 17);
             this.chxLogToFile.TabIndex = 9;
@@ -214,7 +217,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(350, 38);
+            this.label4.Location = new System.Drawing.Point(568, 9);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(29, 13);
             this.label4.TabIndex = 10;
@@ -222,17 +225,47 @@
             // 
             // txtForwardPort
             // 
-            this.txtForwardPort.Location = new System.Drawing.Point(392, 34);
+            this.txtForwardPort.Location = new System.Drawing.Point(603, 6);
             this.txtForwardPort.Name = "txtForwardPort";
-            this.txtForwardPort.Size = new System.Drawing.Size(56, 20);
+            this.txtForwardPort.Size = new System.Drawing.Size(41, 20);
             this.txtForwardPort.TabIndex = 11;
             this.txtForwardPort.Text = "80";
+            // 
+            // chxHttpsClient
+            // 
+            this.chxHttpsClient.AutoSize = true;
+            this.chxHttpsClient.Location = new System.Drawing.Point(32, 42);
+            this.chxHttpsClient.Name = "chxHttpsClient";
+            this.chxHttpsClient.Size = new System.Drawing.Size(80, 17);
+            this.chxHttpsClient.TabIndex = 13;
+            this.chxHttpsClient.Text = "https client ";
+            this.chxHttpsClient.UseVisualStyleBackColor = true;
+            // 
+            // txtCertForClientConnection
+            // 
+            this.txtCertForClientConnection.Location = new System.Drawing.Point(118, 41);
+            this.txtCertForClientConnection.Name = "txtCertForClientConnection";
+            this.txtCertForClientConnection.Size = new System.Drawing.Size(191, 20);
+            this.txtCertForClientConnection.TabIndex = 14;
+            // 
+            // chxHttpsServer
+            // 
+            this.chxHttpsServer.AutoSize = true;
+            this.chxHttpsServer.Location = new System.Drawing.Point(355, 43);
+            this.chxHttpsServer.Name = "chxHttpsServer";
+            this.chxHttpsServer.Size = new System.Drawing.Size(81, 17);
+            this.chxHttpsServer.TabIndex = 15;
+            this.chxHttpsServer.Text = "https server";
+            this.chxHttpsServer.UseVisualStyleBackColor = true;
             // 
             // WinProxy
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(657, 571);
+            this.ClientSize = new System.Drawing.Size(675, 571);
+            this.Controls.Add(this.chxHttpsServer);
+            this.Controls.Add(this.txtCertForClientConnection);
+            this.Controls.Add(this.chxHttpsClient);
             this.Controls.Add(this.txtForwardPort);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.chxLogToFile);
@@ -277,6 +310,9 @@
         private System.Windows.Forms.CheckBox chxLogToFile;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox txtForwardPort;
+        private System.Windows.Forms.CheckBox chxHttpsClient;
+        private System.Windows.Forms.TextBox txtCertForClientConnection;
+        private System.Windows.Forms.CheckBox chxHttpsServer;
     }
 }
 
